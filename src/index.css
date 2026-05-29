@@ -1,0 +1,87 @@
+﻿@import "tailwindcss";
+
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --text: #000000;
+  --muted: #111111;
+  --border: #e4e7ec;
+  --primary: #15803d;
+  --success: #15803d;
+  --danger: #b42318;
+}
+
+:root.dark {
+  --bg: #0b1220;
+  --card: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #374151;
+  --primary: #34d399;
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Inter", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  color: var(--text);
+  background-color: var(--card);
+}
+
+input,
+select,
+textarea {
+  color: var(--text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+select option {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
+.dark select option {
+  color: #e5e7eb;
+  background-color: #111827;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0px 1000px var(--card) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+
+button { color: var(--text); }
+button:disabled { opacity: .6; }
+table, th, td { color: var(--text); }
+
+
+/* Light Theme Readability */
+:root:not(.dark) .text-slate-500,
+:root:not(.dark) .text-slate-600,
+:root:not(.dark) .text-slate-700 {
+  color: #000000 !important;
+}
+
