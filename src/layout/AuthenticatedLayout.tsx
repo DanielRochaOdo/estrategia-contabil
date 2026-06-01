@@ -59,11 +59,10 @@ export function AuthenticatedLayout() {
           </button>
           <button
             onClick={async () => { await logout(); navigate("/login", { replace: true }); }}
-            className={`flex w-full items-center rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--text)] hover:bg-slate-100 dark:hover:bg-slate-800 ${collapsed ? "justify-center" : "gap-3"}`}
+            className="flex w-full items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--text)] hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Sair"
           >
             <LogOut size={16} />
-            {!collapsed && <span>Sair</span>}
           </button>
         </div>
       </aside>

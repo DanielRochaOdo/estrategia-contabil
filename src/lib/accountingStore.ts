@@ -198,7 +198,8 @@ function contaCandidates(rawConta: string) {
 export async function fetchAnalyticalLinkedRecords(params: {
   scope: AccessScope;
   conta: string;
-  mes: string;
+  descricao?: string;
+  mes?: string;
   batch?: string;
   linkedUserId?: string;
   linkedSetor?: string;
@@ -206,24 +207,28 @@ export async function fetchAnalyticalLinkedRecords(params: {
   if (!supabase) return [];
   const client = supabase;
   const contaValues = contaCandidates(params.conta);
-  if (!contaValues.length || !params.mes) return [];
+  if (!contaValues.length) return [];
 
-  let query = client
-    .from("accounting_analytic_records")
-    .select("id, conta, descricao, valor, forma, mes, user_id, setor, upload_batch_id")
-    .eq("mes", params.mes)
-    .in("conta", contaValues)
-    .order("created_at", { ascending: false });
+  const data = await fetchAllPages<any>(async (from, to) => {
+    let query = client
+      .from("accounting_analytic_records")
+      .select("id, conta, descricao, valor, forma, mes, user_id, setor, upload_batch_id")
+      .in("conta", contaValues)
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
-  if (params.batch) query = query.eq("upload_batch_id", params.batch);
-  if (params.scope.role === "user") query = query.eq("user_id", params.scope.userId);
-  if (params.scope.role === "admin" && params.scope.filterSetor && params.scope.filterSetor !== "todos") query = query.eq("setor", params.scope.filterSetor);
-  if (params.scope.role === "admin" && params.scope.filterUserId && params.scope.filterUserId !== "todos") query = query.eq("user_id", params.scope.filterUserId);
-  if (params.scope.role === "admin" && params.linkedSetor) query = query.eq("setor", params.linkedSetor);
-  if (params.scope.role === "admin" && params.linkedUserId) query = query.eq("user_id", params.linkedUserId);
-
-  const { data, error } = await query;
-  if (error) throw new Error(`Falha ao carregar analítico vinculado: ${error.message}`);
+    if (params.mes && params.mes !== "todos") query = query.eq("mes", params.mes);
+    if (params.batch) query = query.eq("upload_batch_id", params.batch);
+    if (params.descricao) query = query.ilike("descricao", `%${params.descricao}%`);
+    if (params.scope.role === "user") query = query.eq("user_id", params.scope.userId);
+    if (params.scope.role === "admin" && params.scope.filterSetor && params.scope.filterSetor !== "todos") query = query.eq("setor", params.scope.filterSetor);
+    if (params.scope.role === "admin" && params.scope.filterUserId && params.scope.filterUserId !== "todos") query = query.eq("user_id", params.scope.filterUserId);
+    if (params.scope.role === "admin" && params.linkedSetor) query = query.eq("setor", params.linkedSetor);
+    if (params.scope.role === "admin" && params.linkedUserId) query = query.eq("user_id", params.linkedUserId);
+    return await query;
+  }).catch((error: any) => {
+    throw new Error(`Falha ao carregar analítico vinculado: ${error.message}`);
+  });
 
   return (data ?? []).map((row) => ({
     recordId: String((row as any).id ?? ""),

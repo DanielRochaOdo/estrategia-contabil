@@ -1,24 +1,24 @@
-import * as XLSX from "xlsx";
+ï»¿import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import type { AnalyticalRow, SyntheticRow } from "./types";
 
 const monthMap: Record<string, string> = {
-  jan: "01", janeiro: "01", fev: "02", fevereiro: "02", mar: "03", marco: "03", "março": "03", abr: "04", abril: "04", mai: "05", maio: "05", jun: "06", junho: "06", jul: "07", julho: "07", ago: "08", agosto: "08", set: "09", setembro: "09", out: "10", outubro: "10", nov: "11", novembro: "11", dez: "12", dezembro: "12",
+  jan: "01", janeiro: "01", fev: "02", fevereiro: "02", mar: "03", marco: "03", abr: "04", abril: "04", mai: "05", maio: "05", jun: "06", junho: "06", jul: "07", julho: "07", ago: "08", agosto: "08", set: "09", setembro: "09", out: "10", outubro: "10", nov: "11", novembro: "11", dez: "12", dezembro: "12",
 };
 
 const SHEET_ALIASES = {
-  synthetic: ["sintetico", "sintético", "resumo", "consolidado"],
-  analytic: ["analitico", "analítico", "detalhado", "lancamentos", "lançamentos"],
+  synthetic: ["sintetico", "sintï¿½tico", "resumo", "consolidado"],
+  analytic: ["analitico", "analï¿½tico", "detalhado", "lancamentos", "lanï¿½amentos"],
 };
 
 const aliases = {
   conta: ["conta", "codigo", "codigo da conta", "codigo_conta", "codigo_conta_financeira"],
-  descricao: ["descricao", "descrição", "nome", "nome da conta", "nome_conta"],
+  descricao: ["descricao", "descriï¿½ï¿½o", "nome", "nome da conta", "nome_conta"],
   total: ["total", "valor total", "total_periodo"],
-  valor: ["valor", "valor lancamento", "valor lançamento", "valor_lancamento"],
+  valor: ["valor", "valor lancamento", "valor lanï¿½amento", "valor_lancamento"],
   grupo: ["grupo", "grupo da conta", "grupo_conta"],
-  forma: ["forma", "tipo", "tipo de lançamento", "tipo de lancamento", "categoria", "forma mes", "forma mês"],
-  mes: ["mes", "mês", "competencia", "competência"],
+  forma: ["forma", "tipo", "tipo de lanï¿½amento", "tipo de lancamento", "categoria", "forma mes", "forma mï¿½s"],
+  mes: ["mes", "mï¿½s", "competencia", "competï¿½ncia"],
 };
 
 export const normalizeText = (v: unknown) => String(v ?? "").trim().replace(/\s+/g, " ");
@@ -48,6 +48,7 @@ export const normalizeCompetencia = (input: unknown): string | null => {
   }
 
   const s = normalizeText(input).toLowerCase();
+  const sAscii = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (!s) return null;
 
   if (/^\d{5,6}$/.test(s)) {
@@ -72,19 +73,19 @@ export const normalizeCompetencia = (input: unknown): string | null => {
     if (day >= 1 && day <= 31 && month >= 1 && month <= 12) return `${yyyy}-${mm}`;
   }
 
-  const m1 = s.match(/^(\d{2})\/(\d{4})$/);
+  const m1 = sAscii.match(/^(\d{2})\/(\d{4})$/);
   if (m1) return `${m1[2]}-${m1[1]}`;
-  const m2 = s.match(/^(\d{4})-(\d{2})$/);
+  const m2 = sAscii.match(/^(\d{4})-(\d{2})$/);
   if (m2) return `${m2[1]}-${m2[2]}`;
-  const m2b = s.match(/^(\d{2})-(\d{4})$/);
+  const m2b = sAscii.match(/^(\d{2})-(\d{4})$/);
   if (m2b) return `${m2b[2]}-${m2b[1]}`;
-  const m2c = s.match(/^(\d{2})\/(\d{2})$/);
+  const m2c = sAscii.match(/^(\d{2})\/(\d{2})$/);
   if (m2c) return `20${m2c[2]}-${m2c[1]}`;
-  const m2d = s.match(/^(\d{2})-(\d{2})$/);
+  const m2d = sAscii.match(/^(\d{2})-(\d{2})$/);
   if (m2d) return `20${m2d[2]}-${m2d[1]}`;
-  const m3 = s.match(/^([a-zçãé]+)\/(\d{4})$/);
+  const m3 = sAscii.match(/^([a-z]+)\/(\d{4})$/);
   if (m3 && monthMap[m3[1]]) return `${m3[2]}-${monthMap[m3[1]]}`;
-  const m4 = s.match(/^([a-zçãé]+)\/(\d{2})$/);
+  const m4 = sAscii.match(/^([a-z]+)\/(\d{2})$/);
   if (m4 && monthMap[m4[1]]) return `20${m4[2]}-${monthMap[m4[1]]}`;
   return null;
 };
@@ -115,12 +116,12 @@ export function parseXlsxTwoSheets(file: File): Promise<{ syntheticRows: Synthet
     reader.onload = () => {
       try {
         const wb = XLSX.read(reader.result, { type: "binary" });
-        if (wb.SheetNames.length < 2) return reject(new Error("Arquivo inválido: é obrigatório possuir duas abas (Sintético e Analítico)."));
+        if (wb.SheetNames.length < 2) return reject(new Error("Arquivo invï¿½lido: ï¿½ obrigatï¿½rio possuir duas abas (Sintï¿½tico e Analï¿½tico)."));
 
         const s1 = wb.SheetNames[0];
         const s2 = wb.SheetNames[1];
-        if (!isAllowedSheet(s1, "synthetic")) return reject(new Error("A primeira aba deve ser Sintético (ou equivalente: Sintetico/Resumo/Consolidado)."));
-        if (!isAllowedSheet(s2, "analytic")) return reject(new Error("A segunda aba deve ser Analítico (ou equivalente: Analitico/Detalhado/Lançamentos)."));
+        if (!isAllowedSheet(s1, "synthetic")) return reject(new Error("A primeira aba deve ser Sintï¿½tico (ou equivalente: Sintetico/Resumo/Consolidado)."));
+        if (!isAllowedSheet(s2, "analytic")) return reject(new Error("A segunda aba deve ser Analï¿½tico (ou equivalente: Analitico/Detalhado/Lanï¿½amentos)."));
 
         const syntheticJson = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[s1], { defval: "" });
         const analyticJson = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[s2], { defval: "" });
@@ -142,18 +143,18 @@ export function parseXlsxTwoSheets(file: File): Promise<{ syntheticRows: Synthet
 
         const missingSynthetic: string[] = [];
         if (!sConta) missingSynthetic.push("Conta");
-        if (!sDescricao) missingSynthetic.push("Descrição");
+        if (!sDescricao) missingSynthetic.push("Descriï¿½ï¿½o");
         if (!sTotal) missingSynthetic.push("Total");
         if (!sGrupo) missingSynthetic.push("Grupo");
-        if (!sMes) missingSynthetic.push("Mês");
-        if (missingSynthetic.length) return reject(new Error(`Aba Sintético com colunas ausentes: ${missingSynthetic.join(", ")}`));
+        if (!sMes) missingSynthetic.push("Mï¿½s");
+        if (missingSynthetic.length) return reject(new Error(`Aba Sintï¿½tico com colunas ausentes: ${missingSynthetic.join(", ")}`));
 
         const missingAnalytic: string[] = [];
         if (!aConta) missingAnalytic.push("Conta");
-        if (!aDescricao) missingAnalytic.push("Descrição");
+        if (!aDescricao) missingAnalytic.push("Descriï¿½ï¿½o");
         if (!aValor) missingAnalytic.push("Valor");
         if (!aForma) missingAnalytic.push("Forma");
-        if (missingAnalytic.length) return reject(new Error(`Aba Analítico com colunas ausentes: ${missingAnalytic.join(", ")}`));
+        if (missingAnalytic.length) return reject(new Error(`Aba Analï¿½tico com colunas ausentes: ${missingAnalytic.join(", ")}`));
 
         const syntheticRows: SyntheticRow[] = [];
         syntheticJson.forEach((r) => {
@@ -163,9 +164,9 @@ export function parseXlsxTwoSheets(file: File): Promise<{ syntheticRows: Synthet
           if (!conta || !mes) return;
           syntheticRows.push({
             conta,
-            descricao: normalizeText(sDescricao ? r[sDescricao] : "") || "Sem descrição",
+            descricao: normalizeText(sDescricao ? r[sDescricao] : "") || "Sem descriï¿½ï¿½o",
             total: parseCurrencyBR(sTotal ? r[sTotal] : 0),
-            grupo: normalizeText(sGrupo ? r[sGrupo] : "") || "Não informado",
+            grupo: normalizeText(sGrupo ? r[sGrupo] : "") || "Nï¿½o informado",
             mes,
           });
         });
@@ -189,7 +190,7 @@ export function parseXlsxTwoSheets(file: File): Promise<{ syntheticRows: Synthet
         analyticJson.forEach((r) => {
           if (Object.values(r).every((v) => normalizeText(v) === "")) return;
           const conta = normalizeText(aConta ? r[aConta] : "");
-          const descricao = normalizeText(aDescricao ? r[aDescricao] : "") || "Sem descrição";
+          const descricao = normalizeText(aDescricao ? r[aDescricao] : "") || "Sem descriï¿½ï¿½o";
           const mesParsed = normalizeCompetencia(aMes ? r[aMes] : "");
           let mes = mesParsed;
           if (!mes) {
@@ -211,13 +212,13 @@ export function parseXlsxTwoSheets(file: File): Promise<{ syntheticRows: Synthet
             conta,
             descricao,
             valor: parseCurrencyBR(aValor ? r[aValor] : 0),
-            forma: normalizeText(aForma ? r[aForma] : "") || "Não informado",
+            forma: normalizeText(aForma ? r[aForma] : "") || "Nï¿½o informado",
             mes,
           });
         });
 
         if (analyticalRows.length === 0 && analyticJson.length > 0) {
-          return reject(new Error("Aba Analítico sem mês válido. Preencha Mês ou garanta vínculo claro com o Sintético por Conta."));
+          return reject(new Error("Aba Analï¿½tico sem mï¿½s vï¿½lido. Preencha Mï¿½s ou garanta vï¿½nculo claro com o Sintï¿½tico por Conta."));
         }
 
         resolve({
@@ -231,7 +232,7 @@ export function parseXlsxTwoSheets(file: File): Promise<{ syntheticRows: Synthet
         reject(new Error("Falha ao ler o arquivo XLSX."));
       }
     };
-    reader.onerror = () => reject(new Error("Não foi possível ler o arquivo."));
+    reader.onerror = () => reject(new Error("Nï¿½o foi possï¿½vel ler o arquivo."));
     reader.readAsBinaryString(file);
   });
 }
@@ -241,7 +242,7 @@ export function buildSyntheticFromAnalytical(rows: AnalyticalRow[]): SyntheticRo
   rows.forEach((r) => {
     const key = `${r.conta}::${r.descricao}::${r.mes}`;
     const prev = map.get(key);
-    map.set(key, { conta: r.conta, descricao: r.descricao, total: (prev?.total ?? 0) + r.valor, grupo: "Não informado", mes: r.mes });
+    map.set(key, { conta: r.conta, descricao: r.descricao, total: (prev?.total ?? 0) + r.valor, grupo: "Nï¿½o informado", mes: r.mes });
   });
   return Array.from(map.values()).sort((a, b) => b.total - a.total);
 }
@@ -257,7 +258,7 @@ export function calculateInconsistencies(syntheticRows: SyntheticRow[], analytic
     const key = `${s.conta}::${s.mes}`;
     const analyticTotal = sumAnalytic.get(key);
     if (analyticTotal === undefined) {
-      return { conta: s.conta, mes: s.mes, descricao: s.descricao, syntheticTotal: s.total, analyticTotal: 0, diff: s.total, status: "Sem analítico" as const };
+      return { conta: s.conta, mes: s.mes, descricao: s.descricao, syntheticTotal: s.total, analyticTotal: 0, diff: s.total, status: "Sem analï¿½tico" as const };
     }
     const diff = s.total - analyticTotal;
     return { conta: s.conta, mes: s.mes, descricao: s.descricao, syntheticTotal: s.total, analyticTotal, diff, status: Math.abs(diff) < 0.005 ? "OK" as const : "Divergente" as const };
@@ -268,19 +269,19 @@ export function exportTemplateXlsx() {
   const wb = XLSX.utils.book_new();
 
   const wsSynthetic = XLSX.utils.aoa_to_sheet([
-    ["Conta", "Descrição", "Total", "Grupo", "Mês"],
+    ["Conta", "Descriï¿½ï¿½o", "Total", "Grupo", "Mï¿½s"],
     ["1001", "Receita Operacional", "400,00", "Receitas", "01/2026"],
     ["2001", "Despesa Administrativa", "150,00", "Despesas", "01/2026"],
   ]);
-  XLSX.utils.book_append_sheet(wb, wsSynthetic, "Sintético");
+  XLSX.utils.book_append_sheet(wb, wsSynthetic, "Sintï¿½tico");
 
   const wsAnalytic = XLSX.utils.aoa_to_sheet([
-    ["Conta", "Descrição", "Valor", "Forma", "Mês"],
+    ["Conta", "Descriï¿½ï¿½o", "Valor", "Forma", "Mï¿½s"],
     ["1001", "Receita Operacional", "100,00", "Boleto", "01/2026"],
-    ["1001", "Receita Operacional", "300,00", "Cartão", "01/2026"],
-    ["2001", "Despesa Administrativa", "150,00", "Transferência", "01/2026"],
+    ["1001", "Receita Operacional", "300,00", "Cartï¿½o", "01/2026"],
+    ["2001", "Despesa Administrativa", "150,00", "Transferï¿½ncia", "01/2026"],
   ]);
-  XLSX.utils.book_append_sheet(wb, wsAnalytic, "Analítico");
+  XLSX.utils.book_append_sheet(wb, wsAnalytic, "Analï¿½tico");
 
   XLSX.writeFile(wb, "modelo_contabilidade_estrategica_duas_abas.xlsx");
 }
@@ -290,7 +291,7 @@ export function exportViewToXlsx(params: { sintetico: SyntheticRow[]; analitico:
   const byMonth = Object.entries(params.analitico.reduce((acc, r) => { acc[r.mes] = (acc[r.mes] ?? 0) + r.valor; return acc; }, {} as Record<string, number>)).map(([mes, total]) => ({ Mes: mes, Total: total })).sort((a, b) => a.Mes.localeCompare(b.Mes));
 
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Contabilidade Estratégica";
+  workbook.creator = "Contabilidade Estratï¿½gica";
   workbook.created = new Date();
 
   const borderStyle: Partial<ExcelJS.Borders> = {
