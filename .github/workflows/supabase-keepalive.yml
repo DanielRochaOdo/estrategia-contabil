@@ -1,0 +1,43 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+    steps:
+      - name: Validar secrets
+        shell: bash
+        run: |
+          if [[ -z "$SUPABASE_URL" ]]; then
+            echo "Erro: o secret SUPABASE_URL não está configurado."
+            exit 1
+          fi
+
+          if [[ -z "$SUPABASE_ANON_KEY" ]]; then
+            echo "Erro: o secret SUPABASE_ANON_KEY não está configurado."
+            exit 1
+          fi
+
+      - name: Consultar API REST do Supabase
+        shell: bash
+        run: |
+          curl \
+            --silent \
+            --show-error \
+            --fail-with-body \
+            --output /dev/null \
+            --write-out "HTTP %{http_code}\n" \
+            --get \
+            --header "apikey: $SUPABASE_ANON_KEY" \
+            --header "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            --data-urlencode "select=id" \
+            --data-urlencode "limit=1" \
+            "${SUPABASE_URL%/}/rest/v1/accounting_entries"
